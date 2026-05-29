@@ -20,9 +20,15 @@ st.title("⚡ CryptoScan: Institutional AI Terminal")
 # --- 2. Load Assets ---
 @st.cache_resource
 def load_assets():
-    path = os.path.join(os.getcwd(), 'models')
-    model = load_model(os.path.join(path, "lstm_model.h5"))
-    with open(os.path.join(path, 'scaler.pkl'), 'rb') as f:
+    model_path = os.path.join(os.getcwd(), 'models', 'lstm_model.h5')
+    scaler_path = os.path.join(os.getcwd(), 'models', 'scaler.pkl')
+    
+    # Check if files exist
+    if not os.path.exists(model_path) or not os.path.exists(scaler_path):
+        return None, None
+        
+    model = load_model(model_path)
+    with open(scaler_path, 'rb') as f:
         scaler = pickle.load(f)
     return model, scaler
 
@@ -32,7 +38,8 @@ model, scaler = load_assets()
 @st.cache_data(ttl=300)
 def get_data(ticker):
     df = yf.download(ticker, period="3mo", interval="1d")
-    if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.get_level_values(0)
+    if isinstance(df.columns, pd.MultiIndex): 
+        df.columns = df.columns.get_level_values(0)
     return df
 
 ticker = st.sidebar.selectbox("Market Asset", ["BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD"])
@@ -52,25 +59,26 @@ c1, c2 = st.columns(2)
 
 # AI Forecasting (Next Day)
 if c1.button("RUN: AI PREDICTION (24H)"):
-    seq = df['Close'].values[-60:].reshape(-1, 1)
-    scaled = scaler.transform(seq)
-    pred = model.predict(scaled.reshape(1, 60, 1))
-    raw_pred = float(scaler.inverse_transform(pred)[0][0])
-    
-    st.subheader("AI Forecast Report")
-    st.metric("Predicted Next Day Close", f"${raw_pred:,.2f}")
-    st.success("Logic: Hybrid LSTM Model analysis completed.")
+    if model is None or scaler is None:
+        st.error("Error: AI Model or Scaler not found. Please check the /models directory.")
+    else:
+        seq = df['Close'].values[-60:].reshape(-1, 1)
+        scaled = scaler.transform(seq)
+        pred = model.predict(scaled.reshape(1, 60, 1))
+        raw_pred = float(scaler.inverse_transform(pred)[0][0])
+        
+        st.subheader("AI Forecast Report")
+        st.metric("Predicted Next Day Close", f"${raw_pred:,.2f}")
+        st.success("Logic: Hybrid LSTM Model analysis completed.")
 
-# PAST 7 DAYS ANALYSIS (Original Historical Data)
+# PAST 7 DAYS ANALYSIS
 if c2.button("RUN: PAST 7 DAYS ANALYSIS"):
-    # Magche 7 divas getle
     past_7_days = df.tail(7)[['Close']]
     
     st.subheader("Market Performance: Last 7 Days")
     st.line_chart(past_7_days)
     st.table(past_7_days.sort_index(ascending=False))
     
-    # Simple Statistical Insight
     avg_price = past_7_days['Close'].mean()
     st.info(f"Status: Historical Analysis Complete. 7-Day Average: ${avg_price:,.2f}")
 
