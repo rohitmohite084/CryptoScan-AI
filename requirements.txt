@@ -7,6 +7,5 @@ seaborn
 plotly
 scikit-learn
 statsmodels
-tensorflow==2.15.0
 keras==2.15.0
 prophet
