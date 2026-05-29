@@ -26,7 +26,7 @@ def load_assets():
         scaler = pickle.load(f)
     return model, scaler
 
-model, scaler = load_assets()
+#model, scaler = load_assets()
 
 # --- 3. Data Fetching ---
 @st.cache_data(ttl=300)
