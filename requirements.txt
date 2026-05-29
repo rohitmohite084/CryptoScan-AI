@@ -1,12 +1,6 @@
 streamlit
-yfinance
 pandas
-numpy
-matplotlib
-seaborn
-plotly
+yfinance
+tensorflow
 scikit-learn
-statsmodels
-keras==2.15.0
-prophet
-tensorflow-cpu
+numpy<2.0.0
