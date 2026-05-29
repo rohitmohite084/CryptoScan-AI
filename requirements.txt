@@ -3,4 +3,4 @@ pandas
 yfinance
 scikit-learn
 h5py
-tensorflow-cpu
+tensorflow
