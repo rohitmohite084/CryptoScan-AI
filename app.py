@@ -3,7 +3,7 @@ import pandas as pd
 import yfinance as yf
 import pickle
 import os
-from tensorflow.keras.models import load_model
+#from tensorflow.keras.models import load_model
 
 # --- 1. Page Configuration ---
 st.set_page_config(page_title="CryptoScan: Institutional AI Terminal", layout="wide")
