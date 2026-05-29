@@ -9,3 +9,4 @@ scikit-learn
 statsmodels
 keras==2.15.0
 prophet
+tensorflow-cpu
