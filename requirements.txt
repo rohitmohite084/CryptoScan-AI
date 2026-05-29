@@ -3,5 +3,4 @@ pandas
 yfinance
 scikit-learn
 h5py
-tensorflow-cpu
-numpy<2.0.0
+tensorflow==2.12.0
