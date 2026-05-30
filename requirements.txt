@@ -3,4 +3,4 @@ pandas
 yfinance
 scikit-learn
 h5py
-tensorflow==2.15.0
+onnxruntime
