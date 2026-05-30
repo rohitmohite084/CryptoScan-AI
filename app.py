@@ -5,7 +5,7 @@ import pickle
 import os
 import numpy as np
 
-# सुरक्षितपणे Keras लोड करण्याचा प्रयत्न
+# TensorFlow चा सुरक्षित वापर
 try:
     from tensorflow.keras.models import load_model
     TF_AVAILABLE = True
@@ -28,16 +28,11 @@ st.title("⚡ CryptoScan: Institutional AI Terminal")
 def load_assets():
     model = None
     scaler = None
-    
-    # मॉडेल लोड
-    if TF_AVAILABLE:
+    if TF_AVAILABLE and os.path.exists("lstm_model.h5"):
         try:
-            if os.path.exists("lstm_model.h5"):
-                model = load_model("lstm_model.h5")
+            model = load_model("lstm_model.h5")
         except:
             model = None
-            
-    # स्केलर लोड
     if os.path.exists("scaler.pkl"):
         try:
             with open("scaler.pkl", 'rb') as f:
@@ -61,10 +56,17 @@ ticker = st.sidebar.selectbox("Market Asset", ["BTC-USD", "ETH-USD", "SOL-USD", 
 df = get_data(ticker)
 
 if df is not None:
-    current_price = float(df['Close'].iloc[-1])
+    # सुरक्षित डेटा प्रोसेसिंग
+    try:
+        current_price = float(df['Close'].iloc[-1].item())
+        avg_price = float(df['Close'].mean().item())
+    except:
+        current_price = float(df['Close'].iloc[-1])
+        avg_price = float(df['Close'].mean())
+
     col1, col2, col3 = st.columns(3)
     col1.metric("Live Market Price", f"${current_price:,.2f}")
-    col2.metric("Market Sentiment", "Bullish" if current_price > df['Close'].mean() else "Bearish")
+    col2.metric("Market Sentiment", "Bullish" if current_price > avg_price else "Bearish")
     col3.metric("Terminal Status", "Live Connection")
 
     st.line_chart(df['Close'].tail(60))
@@ -83,7 +85,7 @@ if df is not None:
             except Exception as e:
                 st.error("Prediction failed.")
         else:
-            st.warning("AI Model not loaded (TensorFlow not available or model missing).")
+            st.warning("AI Model not loaded.")
 
     if c2.button("RUN: PAST 7 DAYS ANALYSIS"):
         past_7 = df.tail(7)[['Close']]
