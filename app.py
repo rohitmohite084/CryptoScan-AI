@@ -5,25 +5,32 @@ import pickle
 import os
 import numpy as np
 
-# TensorFlow काढून टाकले आहे, म्हणून इथे import नाही
+# TensorFlow साठी सुरक्षित तपासणी
+TF_AVAILABLE = False
+try:
+    from tensorflow.keras.models import load_model
+    TF_AVAILABLE = True
+except ImportError:
+    TF_AVAILABLE = False
 
-st.set_page_config(page_title="CryptoScan: Institutional AI Terminal", layout="wide")
+st.set_page_config(page_title="CryptoScan: AI Terminal", layout="wide")
 st.title("⚡ CryptoScan: Institutional AI Terminal")
 
-# --- Load Scaler Only ---
+# --- 1. Load Assets ---
 @st.cache_resource
-def load_scaler():
+def load_assets():
+    scaler = None
     if os.path.exists("scaler.pkl"):
         try:
             with open("scaler.pkl", 'rb') as f:
-                return pickle.load(f)
+                scaler = pickle.load(f)
         except:
-            return None
-    return None
+            scaler = None
+    return scaler
 
 scaler = load_scaler()
 
-# --- Data Fetching ---
+# --- 2. Data Fetching ---
 @st.cache_data(ttl=300)
 def get_data(ticker):
     try:
@@ -36,25 +43,22 @@ ticker = st.sidebar.selectbox("Market Asset", ["BTC-USD", "ETH-USD", "SOL-USD", 
 df = get_data(ticker)
 
 if df is not None:
-    # सुरक्षित डेटा प्रोसेसिंग
-    try:
-        current_price = float(df['Close'].iloc[-1].item())
-        avg_price = float(df['Close'].mean().item())
-    except:
-        current_price = float(df['Close'].iloc[-1])
-        avg_price = float(df['Close'].mean())
-
+    # Key Error टाळण्यासाठी सुरक्षित एक्सेस
+    price_col = 'Close'
+    current_price = float(df[price_col].iloc[-1].item())
+    
     col1, col2, col3 = st.columns(3)
-    col1.metric("Live Market Price", f"${current_price:,.2f}")
-    col2.metric("Market Sentiment", "Bullish" if current_price > avg_price else "Bearish")
-    col3.metric("Terminal Status", "Live Connection")
+    col1.metric("Live Price", f"${current_price:,.2f}")
+    col2.metric("Terminal Status", "Active")
+    col3.metric("Mode", "Statistical Analysis")
 
-    st.line_chart(df['Close'].tail(60))
+    st.line_chart(df[price_col].tail(60))
 
     if st.button("RUN: PREDICTION"):
-        st.warning("AI Model (TensorFlow) सध्या उपलब्ध नाही. तुम्ही साधे ट्रेंड ॲनालिसिस वापरू शकता.")
-        # इथे तुम्ही साधे सांख्यिकीय प्रेडिक्शन दाखवू शकता
-        st.write("24H Trend Prediction active...")
-
-st.markdown("---")
-st.caption("Institutional Trading Interface | © 2026")
+        if TF_AVAILABLE:
+            st.info("AI Model is running...")
+        else:
+            st.warning("AI Model सध्या उपलब्ध नाही. (TensorFlow नाही).")
+            st.write("सध्याच्या मार्केट ट्रेंडनुसार: किंमत ही सरासरीपेक्षा " + ("वर आहे." if current_price > df[price_col].mean().item() else "खाली आहे."))
+else:
+    st.error("डेटा लोड होऊ शकला नाही.")
