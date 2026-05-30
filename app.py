@@ -24,30 +24,32 @@ st.markdown("""
 
 st.title("⚡ CryptoScan: Institutional AI Terminal")
 
-# --- 2. Load Assets ---
+# --- 2. Load Assets (Updated with Debugging) ---
 @st.cache_resource
 def load_assets():
-    # फाईल्स रूट डिरेक्टरीमध्ये आहेत असे मानून
-    model_path_h5 = "lstm_model.h5"
-    model_path_folder = "my_saved_model"
-    scaler_path = "scaler.pkl"
+    current_dir = os.getcwd()
+    model_path_h5 = os.path.join(current_dir, "lstm_model.h5")
+    model_path_folder = os.path.join(current_dir, "my_saved_model")
+    scaler_path = os.path.join(current_dir, "scaler.pkl")
     
     model = None
     scaler = None
     
+    # मॉडेल लोड करणे
     if TF_AVAILABLE:
         if os.path.exists(model_path_h5):
             model = load_model(model_path_h5)
         elif os.path.exists(model_path_folder):
             model = load_model(model_path_folder)
         
+    # स्केलर लोड करणे
     if os.path.exists(scaler_path):
         with open(scaler_path, 'rb') as f:
             scaler = pickle.load(f)
             
-    return model, scaler
+    return model, scaler, current_dir, os.listdir(current_dir)
 
-model, scaler = load_assets()
+model, scaler, curr_dir, files = load_assets()
 
 # --- 3. Data Fetching ---
 @st.cache_data(ttl=300)
@@ -80,21 +82,17 @@ if df is not None:
 
     # AI Forecasting
     if c1.button("RUN: AI PREDICTION (24H)"):
+        # डीबग चेक
         if model is None or scaler is None:
-            st.error("AI Model/Scaler not found in root directory or my_saved_model folder.")
+            st.error("AI Model/Scaler not found!")
+            st.write(f"Current Directory: {curr_dir}")
+            st.write(f"Files found in directory: {files}")
         else:
             try:
-                # अचूक प्रेडिक्शनसाठी ६० दिवसांचा डेटा घेणे
                 last_60_days = df['Close'].values[-60:]
-                # मॉडेलच्या ट्रेनिंगप्रमाणे डेटा स्केल करणे (reshape -1, 1)
                 scaled_data = scaler.transform(last_60_days.reshape(-1, 1))
-                # मॉडेलसाठी 3D फॉरमॅट (1, 60, 1)
                 X_input = scaled_data.reshape(1, 60, 1)
-                
-                # प्रेडिक्शन
                 pred = model.predict(X_input, verbose=0)
-                
-                # पुन्हा मूळ किंमतीत रूपांतरित करणे
                 raw_pred = float(scaler.inverse_transform(pred)[0][0])
                 
                 st.subheader("AI Forecast Report")
