@@ -3,4 +3,5 @@ pandas
 yfinance
 scikit-learn
 h5py
-tensorflow==2.16.1
+tensorflow
+numpy
