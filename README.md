@@ -40,7 +40,7 @@ As part of my Data Science and Analytics internship at **Amdox Technologies Pvt.
 
 ## 🔗 Live Project
 You can access the live dashboard here:
-👉 **[Insert your Streamlit Cloud Live Link here]**
+👉 **https://rohitmohite084-cryptoscan-ai.hf.space**
 
 ---
 *Developed as part of Data Science and Analytics Internship at Amdox Technologies Pvt. Ltd., Bengaluru | Powered by CryptoScan Engine*
